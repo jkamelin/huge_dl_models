@@ -50,3 +50,7 @@ def main():
 
     avg_time = np.average(inference_time)
     print(f'Average inference time: {avg_time} seconds')
+
+
+if __name__ == '__main__':
+    main()
