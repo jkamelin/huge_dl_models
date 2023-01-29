@@ -5,9 +5,9 @@ import jax.numpy as jnp
 import numpy as np
 import random
 
-from flax.jax_utils import replicate
+# from flax.jax_utils import replicate
 from flax.training.common_utils import shard_prng_key
-from functools import partial
+# from functools import partial
 from time import time
 
 from dalle_mini import DalleBart, DalleBartProcessor
@@ -19,7 +19,7 @@ DALLE_COMMIT_ID = None
 VQGAN_REPO = 'dalle-mini/vqgan_imagenet_f16_16384'
 VQGAN_COMMIT_ID = 'e93a26e7707683d349bf5d5c41c5b0ef69b677a9'
 
-NUM_DEVICES = jax.local_device_count()
+# NUM_DEVICES = jax.local_device_count()
 
 
 class DalleModel:
@@ -35,13 +35,12 @@ class DalleModel:
 
         vqgan, vqgan_params = VQModel.from_pretrained(VQGAN_REPO, revision=VQGAN_COMMIT_ID, _do_init=False)
 
-        params = replicate(params)
-        vqgan_params = replicate(vqgan_params)
+        # params = replicate(params)
+        # vqgan_params = replicate(vqgan_params)
 
         return cls(model, params, vqgan, vqgan_params)
 
     # model inference
-    @partial(jax.pmap, axis_name="batch", static_broadcasted_argnums=(3, 4, 5, 6))
     def p_generate(self, tokenized_prompt, key, top_k, top_p, temperature, condition_scale):
         return self.model.generate(
             **tokenized_prompt,
@@ -54,7 +53,6 @@ class DalleModel:
         )
 
     # decode image
-    @partial(jax.pmap, axis_name="batch")
     def p_decode(self, indices):
         return self.vqgan.decode_code(indices, params=self.vqgan_params)
 
@@ -62,11 +60,11 @@ class DalleModel:
                         gen_top_k=None, gen_top_p=None, temperature=None, cond_scale=1.0):
         images = []
         inference_time = 0
-        for _ in range(max(n_predictions // jax.device_count(), 1)):
+        for _ in range(max(n_predictions, 1)):
             key, subkey = jax.random.split(key)
 
             t0 = time()
-            encoded_images = self.p_generate(
+            encoded_images = self.model.generate(
                 tokenized_prompt,
                 shard_prng_key(subkey),
                 gen_top_k,
@@ -75,7 +73,7 @@ class DalleModel:
                 cond_scale,
             )
             encoded_images = encoded_images.sequences[..., 1:]
-            decoded_images = self.p_decode(encoded_images)
+            decoded_images = self.vqgan.decode_code(encoded_images, params=self.vqgan_params)
             generation_time = time() - t0
 
             inference_time += generation_time
@@ -98,9 +96,9 @@ def cli_argument_parser():
 def prepare_input(prompts):
     processor = DalleBartProcessor.from_pretrained(DALLE_MODEL, revision=DALLE_COMMIT_ID)
     tokenized_prompts = processor(prompts)
-    tokenized_prompt = replicate(tokenized_prompts)
+    # tokenized_prompt = replicate(tokenized_prompts)
 
-    return tokenized_prompt
+    return tokenized_prompts
 
 
 def main():
