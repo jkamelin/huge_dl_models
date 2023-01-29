@@ -48,7 +48,7 @@ def export_to_onnx(model, tokenizer, output_file, model_path, input_names):
 def main():
     args = cli_argument_parser()
     export_to_onnx(**MODEL_MAP[args.model], output_file=args.output_file,
-                   model_path=args.model_path, input_names=args.input_names)
+                   model_path=args.model_path, input_names=args.input_names.split(','))
 
 
 if __name__ == '__main__':
