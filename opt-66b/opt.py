@@ -27,7 +27,7 @@ def load_model(device):
 def generate(input, model, tokenizer, device):
     t0 = time()
     inputs = tokenizer(input, return_tensors='pt')
-    generate_ids = model.generate(inputs.input_ids.to(device), max_length=80)
+    generate_ids = model.generate(inputs.input_ids.to(device), max_length=80, do_sample=True)
     result = tokenizer.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)
     generation_time = time() - t0
 
@@ -40,7 +40,7 @@ def main():
     model, tokenizer = load_model(args.device)
     inference_time = []
     while True:
-        text_input = input('Enter text or "stop" to exit')
+        text_input = input('Enter text or "stop" to exit ')
         if text_input == 'stop':
             break
 
