@@ -36,7 +36,7 @@ def export_to_onnx(model, tokenizer, output_file, model_path, input_names):
 
     inputs = tokenizer_("Hello, my dog is cute", return_tensors="pt")
 
-    inp = (inputs[name] for name in input_names)
+    inp = tuple(inputs[name] for name in input_names)
     print(inp)
 
     model_.eval()
