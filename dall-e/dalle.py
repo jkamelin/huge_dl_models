@@ -50,7 +50,7 @@ def cli_argument_parser():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--show', action='store_true', help="Optional. Show output.")
-    parser.add_argument('--batch', type=int, default=9, help="Batch size")
+    parser.add_argument('--batch_size', type=int, default=9, help="Batch size")
 
     args = parser.parse_args()
 
@@ -82,7 +82,7 @@ def main():
     ]
 
     inference_time = []
-    for i in range(prompts.len(), args.batch_size):
+    for i in range(len(prompts), args.batch_size):
         tokenized_prompts = prepare_input(prompts[i:i+args.batch_size])
         images, time_ = dalle.generate_images(tokenized_prompts, 10.0, 5)
         inference_time.append(time_)
