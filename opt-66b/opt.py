@@ -1,6 +1,6 @@
 import argparse
 import numpy as np
-from time import time
+from time import perf_counter
 
 from transformers import GPT2Tokenizer, OPTForCausalLM
 
@@ -25,11 +25,11 @@ def load_model(device):
 
 
 def generate(input, model, tokenizer, device):
-    t0 = time()
+    t0 = perf_counter()
     inputs = tokenizer(input, return_tensors='pt')
-    generate_ids = model.generate(inputs.input_ids.to(device), max_length=80, do_sample=True)
+    generate_ids = model.generate(inputs.input_ids.to(device), max_length=30, do_sample=True, top_k=5, top_p=0.8)
     result = tokenizer.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)
-    generation_time = time() - t0
+    generation_time = perf_counter() - t0
 
     return result, generation_time
 

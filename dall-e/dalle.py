@@ -1,15 +1,15 @@
 import argparse
 import cv2
 import numpy as np
-from time import time
+from time import perf_counter
 
 from dalle_mini import DalleBart, DalleBartProcessor
 from vqgan_jax.modeling_flax_vqgan import VQModel
 
-DALLE_MODEL = '/home/y.kamelina/models/dalle-mini'
+DALLE_MODEL = '/home/jkamelin/yadro/huge_dl_models/dall-e/dalle-mini'
 DALLE_COMMIT_ID = None
 
-VQGAN_REPO = '/home/y.kamelina/models/vqgan_imagenet_f16_16384'
+VQGAN_REPO = '/home/jkamelin/yadro/huge_dl_models/dall-e/vqgan_imagenet_f16_16384'
 VQGAN_COMMIT_ID = None
 
 
@@ -28,22 +28,20 @@ class DalleModel:
 
         return cls(model, params, vqgan, vqgan_params)
 
-    def generate_images(self, tokenized_prompt, condition_scale, top_k):
+    def generate_images(self, tokenized_prompt, condition_scale, top_k, top_p):
         images = []
-        inference_time = 0
-        t0 = time()
-        encoded_images = self.model.generate(**tokenized_prompt, params=self.params, top_k=top_k,
+        t0 = perf_counter()
+        encoded_images = self.model.generate(**tokenized_prompt, params=self.params, top_k=top_k, top_p=top_p,
                                              condition_scale=condition_scale, do_sample=True)
         encoded_images = encoded_images.sequences[..., 1:]
         decoded_images = self.vqgan.decode_code(encoded_images, params=self.vqgan_params)
-        generation_time = time() - t0
+        generation_time = perf_counter() - t0
 
-        inference_time += generation_time
         for decoded_img in decoded_images:
             decoded_img = decoded_img.clip(0.0, 1.0) * 255
             images.append(decoded_img)
 
-        return images, inference_time
+        return images, generation_time
 
 
 def cli_argument_parser():
@@ -84,7 +82,7 @@ def main():
     inference_time = []
     for i in range(0, len(prompts), args.batch_size):
         tokenized_prompts = prepare_input(prompts[i:i+args.batch_size])
-        images, time_ = dalle.generate_images(tokenized_prompts, 10.0, 5)
+        images, time_ = dalle.generate_images(tokenized_prompts, 10.0, 5, 0.8)
         inference_time.append(time_)
 
         if args.show:
