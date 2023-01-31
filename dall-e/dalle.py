@@ -82,7 +82,7 @@ def main():
     ]
 
     inference_time = []
-    for i in range(len(prompts), args.batch_size):
+    for i in range(0, len(prompts), args.batch_size):
         tokenized_prompts = prepare_input(prompts[i:i+args.batch_size])
         images, time_ = dalle.generate_images(tokenized_prompts, 10.0, 5)
         inference_time.append(time_)
