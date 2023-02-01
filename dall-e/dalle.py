@@ -13,7 +13,7 @@ from functools import partial
 from dalle_mini import DalleBart, DalleBartProcessor
 from vqgan_jax.modeling_flax_vqgan import VQModel
 
-DALLE_MODEL = 'dalle-mini/dalle-mini/mini-1:v0'
+DALLE_MODEL = 'dalle-mini/dalle-mini/mega-1-fp16:latest'
 VQGAN_REPO = 'dalle-mini/vqgan_imagenet_f16_16384'
 
 
@@ -36,7 +36,7 @@ class DalleModel:
 
         return cls(model, params, vqgan, vqgan_params)
 
-    @partial(jax.pmap, axis_name="batch", static_broadcasted_argnums=(3, 4, 5, 6))
+    @partial(jax.pmap, axis_name="batch", static_broadcasted_argnums=(3, 4, 5))
     def p_generate(self, tokenized_prompt, key, top_k, top_p, condition_scale):
         return self.model.generate(
             **tokenized_prompt,
@@ -122,26 +122,26 @@ def main():
     dalle = DalleModel.load_model(args.dalle_model, args.vqgan_model, args.use_jax)
 
     inference_time = []
-    while True:
-        text_input = input('Enter text or "stop" to exit ')
-        if text_input == 'stop':
-            break
+    # while True:
+    text_input = prompts = [
+        "sunset over a lake in the mountains",
+        "the Eiffel tower landing on the moon",
+    ]
 
-        tokenized_prompts = prepare_input([text_input], args.dalle_model)
-        if args.use_jax:
-            seed = random.randint(0, 2**32 - 1)
-            key = jax.random.PRNGKey(seed)
-            tokenized_prompt = replicate(tokenized_prompts)
-            images, time_ = dalle.generate_images_jax(tokenized_prompt, key)
+    tokenized_prompts = prepare_input([text_input], args.dalle_model)
+    if args.use_jax:
+        seed = random.randint(0, 2**32 - 1)
+        key = jax.random.PRNGKey(seed)
+        tokenized_prompt = replicate(tokenized_prompts)
+        images, time_ = dalle.generate_images_jax(tokenized_prompt, key)
+    else:
+        images, time_ = dalle.generate_images(tokenized_prompts)
+    inference_time.append(time_)
 
-        else:
-            images, time_ = dalle.generate_images(tokenized_prompts)
-        inference_time.append(time_)
-
-        if args.show:
-            for img in images:
-                img = np.asarray(img, dtype=np.uint8)
-                cv2.imshow(img)
+    if args.show:
+        for img in images:
+            img = np.asarray(img, dtype=np.uint8)
+            cv2.imshow(img)
 
     avg_time = np.average(inference_time)
     print(f'Average inference time: {avg_time} seconds')
