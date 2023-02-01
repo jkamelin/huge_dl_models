@@ -6,11 +6,8 @@ from time import perf_counter
 from dalle_mini import DalleBart, DalleBartProcessor
 from vqgan_jax.modeling_flax_vqgan import VQModel
 
-DALLE_MODEL = '/home/jkamelin/yadro/huge_dl_models/dall-e/dalle-mini'
-DALLE_COMMIT_ID = None
-
-VQGAN_REPO = '/home/jkamelin/yadro/huge_dl_models/dall-e/vqgan_imagenet_f16_16384'
-VQGAN_COMMIT_ID = None
+DALLE_MODEL = 'dalle-mini/dalle-mini/mini-1:v0'
+VQGAN_REPO = 'dalle-mini/vqgan_imagenet_f16_16384'
 
 
 class DalleModel:
@@ -21,10 +18,10 @@ class DalleModel:
         self.vqgan_params = vqgan_params
 
     @classmethod
-    def load_model(cls):
-        model, params = DalleBart.from_pretrained(DALLE_MODEL, dtype=np.float16, _do_init=False)
+    def load_model(cls, dalle_model, vqgan_model):
+        model, params = DalleBart.from_pretrained(dalle_model, dtype=np.float16, _do_init=False)
 
-        vqgan, vqgan_params = VQModel.from_pretrained(VQGAN_REPO, _do_init=False)
+        vqgan, vqgan_params = VQModel.from_pretrained(vqgan_model, _do_init=False)
 
         return cls(model, params, vqgan, vqgan_params)
 
@@ -47,16 +44,19 @@ class DalleModel:
 def cli_argument_parser():
     parser = argparse.ArgumentParser()
 
+    parser.add_argument('--dalle_model', type=str, default=DALLE_MODEL,
+                        help="Optional. Path to dalle model")
+    parser.add_argument('--vqgan_model', type=str, default=VQGAN_REPO,
+                        help="Optional. Path to vqgan model")
     parser.add_argument('--show', action='store_true', help="Optional. Show output.")
-    parser.add_argument('--batch_size', type=int, default=9, help="Batch size")
 
     args = parser.parse_args()
 
     return args
 
 
-def prepare_input(prompts):
-    processor = DalleBartProcessor.from_pretrained(DALLE_MODEL, revision=DALLE_COMMIT_ID)
+def prepare_input(prompts, dalle_model):
+    processor = DalleBartProcessor.from_pretrained(dalle_model, revision=None)
     tokenized_prompts = processor(prompts)
 
     return tokenized_prompts
@@ -67,21 +67,13 @@ def main():
 
     dalle = DalleModel.load_model()
 
-    prompts = [
-        "sunset over a lake in the mountains",
-        "the Eiffel tower landing on the moon",
-        "sunflower on a snowboard",
-        "storm in a glass",
-        "hamster on a treadmill",
-        "winter in a desert",
-        "Sasha walking along the highway",
-        "pank on a wedding",
-        "skateboarder's keyboard"
-    ]
-
     inference_time = []
-    for i in range(0, len(prompts), args.batch_size):
-        tokenized_prompts = prepare_input(prompts[i:i+args.batch_size])
+    while True:
+        text_input = input('Enter text or "stop" to exit ')
+        if text_input == 'stop':
+            break
+
+        tokenized_prompts = prepare_input(text_input, args.dalle_model)
         images, time_ = dalle.generate_images(tokenized_prompts, 10.0, 5, 0.8)
         inference_time.append(time_)
 
