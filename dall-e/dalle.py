@@ -123,12 +123,12 @@ def main():
 
     inference_time = []
     # while True:
-    text_input = prompts = [
+    text_input =  [
         "sunset over a lake in the mountains",
         "the Eiffel tower landing on the moon",
     ]
 
-    tokenized_prompts = prepare_input([text_input], args.dalle_model)
+    tokenized_prompts = prepare_input(text_input, args.dalle_model)
     if args.use_jax:
         seed = random.randint(0, 2**32 - 1)
         key = jax.random.PRNGKey(seed)
