@@ -77,9 +77,12 @@ class OpenVINOLaucnher(BaseLauncher):
         self.output_tensor = self.compiled_model.outputs[0]
         self.infer_request = self.compiled_model.create_infer_request()
 
-    def process(self, inputsy) -> Any:
+    def process(self, inputs) -> Any:
         # infer by OpenVINO runtime
-        outputs = self.infer_request.infer(inputs)[self.output_tensor]
+        ov_inputs = {}
+        for name in inputs.keys():
+            ov_inputs[name] = inputs[name].numpy()
+        outputs = self.infer_request.infer(ov_inputs)[self.output_tensor]
         return outputs
 
 

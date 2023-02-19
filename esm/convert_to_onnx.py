@@ -26,6 +26,8 @@ def cli_argument_parser():
                          help=f"Model name")
     parser.add_argument('--output_path', type=Path, required=True,
                          help=f"Path to onnx file")
+    parser.add_argument('--opset', type=int, required=False, default=11,
+                         help=f"ONNX opset version")
 
     args = parser.parse_args()
 
@@ -37,11 +39,11 @@ def load_model(model_name):
 
     return model, tokenizer
 
-def convert(model, tokenizer, model_name,  output_path):
+def convert(model, tokenizer, model_name, output_path, opset):
     config = AutoConfig.from_pretrained(MODEL_URL[model_name])
     onnx_config = ESMOnnxConfig(config)
 
-    onnx_inputs, onnx_outputs = export(tokenizer, model, onnx_config, onnx_config.default_onnx_opset, output_path)
+    onnx_inputs, onnx_outputs = export(tokenizer, model, onnx_config, opset, output_path)
 
     return onnx_inputs, onnx_outputs
 
@@ -49,7 +51,7 @@ def main():
     args = cli_argument_parser()
 
     model, tokenizer = load_model(args.model_name)
-    onnx_inputs, onnx_outputs = convert(model, tokenizer, args.model_name, args.output_path)
+    onnx_inputs, onnx_outputs = convert(model, tokenizer, args.model_name, args.output_path, args.opset)
 
     print(f'Input names: {onnx_inputs}\nOutput names: {onnx_outputs}')
 

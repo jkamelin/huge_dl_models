@@ -2,7 +2,7 @@ import argparse
 import numpy as np
 import torch
 from time import perf_counter
-from transformers import AutoTokenizer, AutoModelForMaskedLM
+from transformers import AutoTokenizer
 
 from launchers import create_launcher
 
@@ -48,7 +48,6 @@ def main():
         "MKTVRQERLKSIVRILERSKEPVSGAQ<mask>AEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG",
         "KALTARQQEVFDLIRDHISQTGMP<mask>TRAEIAQRLGFRSPNAAEEHLKALARKGVIEIVSGASRGIRLLQEE",
         "KALTARQQEVFDLIRD<mask>ISQTGMPPTRAEIAQRLGFRSPNAAEEHLKALARKGVIEIVSGASRGIRLLQEE",
-        "K A <mask> I S Q",
     ]
 
     inference_time = []
