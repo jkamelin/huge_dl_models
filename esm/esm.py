@@ -46,6 +46,7 @@ def main():
     args = cli_argument_parser()
     inputs = [
         "MKTVRQERLKSIVRILERSKEPVSGAQ<mask>AEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG",
+        "MKTVRQERLKSIVRILERSKEPVSGAQ<mask>AEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG",
         "KALTARQQEVFDLIRDHISQTGMP<mask>TRAEIAQRLGFRSPNAAEEHLKALARKGVIEIVSGASRGIRLLQEE",
         "KALTARQQEVFDLIRD<mask>ISQTGMPPTRAEIAQRLGFRSPNAAEEHLKALARKGVIEIVSGASRGIRLLQEE",
     ]
@@ -57,7 +58,7 @@ def main():
         print(f'Masked symbol: {result}. Generation time: {single_gen_time} sec.')
         inference_time.append(single_gen_time)
 
-    print(f'Average generation time: {np.average(inference_time)} sec.')
+    print(f'Average generation time: {np.average(inference_time[1:])} sec.')
 
 if __name__ == '__main__':
     main()
